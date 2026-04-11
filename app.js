@@ -71,7 +71,7 @@ STATE.customCars = customs;
 
 // –– LOAD CARS ––
 async function loadCars() {
-try { await openDB(); await loadPersistedData(); } catch (e) { console.error(e); }
+try { await openDB(); await loadPersistedData(); } /catch (e) { console.error(e); }
 const res = await fetch(‘cars.json’);
 const seeded = await res.json();
 CARS = […seeded, …STATE.customCars];
