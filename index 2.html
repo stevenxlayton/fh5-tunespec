@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<title>FH5 TuneSpec</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .search-wrap { position: sticky; top: 78px; background: rgba(10,10,10,0.92); backdrop-filter: blur(12px); padding: 12px 18px; z-index: 8; border-bottom: 1px solid var(--border); }
+  .search-wrap input { margin: 0; }
+  .filters { display: flex; gap: 8px; margin-top: 10px; overflow-x: auto; padding-bottom: 2px; }
+  .chip { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-dim); padding: 6px 12px; border-radius: 20px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; white-space: nowrap; cursor: pointer; }
+  .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 0 12px var(--accent-glow); }
+  .count { color: var(--text-dim); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; padding: 12px 18px 0; }
+  .car-list { padding: 8px 18px 18px; }
+  .car-row { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .car-row:active { transform: scale(0.99); border-color: var(--accent); }
+  .car-row .name { font-weight: 700; font-size: 14px; }
+  .car-row .sub { font-size: 11px; color: var(--text-dim); font-family: var(--mono); margin-top: 3px; }
+  .car-row .badge { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; padding: 3px 8px; border-radius: 4px; font-weight: 700; }
+  .badge.rwd { background: rgba(225,6,0,0.15); color: var(--accent-2); border: 1px solid rgba(225,6,0,0.3); }
+  .badge.awd { background: rgba(0,150,255,0.15); color: #4aa3ff; border: 1px solid rgba(0,150,255,0.3); }
+  .badge.fwd { background: rgba(136,136,136,0.15); color: var(--text-dim); border: 1px solid var(--border); }
+  .drift-star { color: var(--accent-2); font-size: 14px; }
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; display: none; align-items: flex-end; }
+  .modal.open { display: flex; }
+  .modal-body { background: var(--bg-raised); width: 100%; max-height: 92vh; overflow-y: auto; border-radius: 16px 16px 0 0; padding: 20px; border-top: 2px solid var(--accent); box-shadow: 0 -8px 40px var(--accent-glow); }
+  .modal h2 { margin-top: 0; }
+  .close-x { float: right; background: none; border: none; color: var(--text-dim); font-size: 24px; cursor: pointer; padding: 0 8px; }
+  .notes-field textarea { min-height: 70px; font-family: var(--sans); }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">FH5</span>
+    <span class="brand-name">TuneSpec</span>
+  </div>
+  <div class="brand-sub">Drift Tuning · Pick a Car</div>
+</header>
+
+<div class="search-wrap">
+  <input type="search" id="search" placeholder="Search cars... (e.g. Supra, Panamera, Miata)">
+  <div class="filters" id="filters">
+    <button class="chip active" data-filter="all">All</button>
+    <button class="chip" data-filter="drift">🏁 Drift Picks</button>
+    <button class="chip" data-filter="rwd">RWD</button>
+    <button class="chip" data-filter="awd">AWD</button>
+    <button class="chip" data-filter="fwd">FWD</button>
+    <button class="chip" data-filter="muscle">Muscle</button>
+    <button class="chip" data-filter="tuned">My Tuned</button>
+  </div>
+</div>
+
+<div class="count" id="count"></div>
+<div class="car-list" id="car-list"></div>
+
+<div class="modal" id="modal">
+  <div class="modal-body">
+    <button class="close-x" id="close">✕</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
