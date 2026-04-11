@@ -177,34 +177,72 @@
     modal.classList.add('open');
   }
 
-  function calcTune(car, weight, fwd) {
+    function calcTune(car, weight, fwd) {
+    // Forza Horizon 5 in-game value ranges (clamped)
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
     const rwd = 100 - fwd;
     const fw = weight * (fwd / 100), rw = weight * (rwd / 100);
     const isRWD = car.drivetrain === 'RWD', isAWD = car.drivetrain === 'AWD', isFWD = car.drivetrain === 'FWD';
     const muscle = car.bodyType === 'Muscle';
+    const oldSchool = car.era === 'Vintage' || car.era === 'Early Vintage' || car.era === 'Pre-War';
+
+    // SPRINGS: lb/in. Forza range roughly 100-2000, but realistic drift 80-900
     let fMul = 1.15, rMul = 0.80;
     if (isAWD) { fMul = 1.10; rMul = 0.95; }
     if (isFWD) { fMul = 0.90; rMul = 1.10; }
     if (muscle) { fMul *= 1.10; rMul *= 1.05; }
-    const fS = Math.round((fw / 14) * fMul), rS = Math.round((rw / 14) * rMul);
+    const fS = clamp(Math.round((fw / 14) * fMul), 80, 900);
+    const rS = clamp(Math.round((rw / 14) * rMul), 80, 900);
+
+    // ARB: Forza range 1.00-65.00
     let fARB = 60, rARB = 3;
     if (isAWD) { fARB = 45; rARB = 15; }
     if (isFWD) { fARB = 3; rARB = 55; }
-    const accel = isRWD ? 100 : (isAWD ? 80 : 40);
-    const decel = isRWD ? 30 : (isAWD ? 25 : 15);
+    if (oldSchool) fARB = Math.min(fARB, 50);
+    fARB = clamp(fARB, 1, 65);
+    rARB = clamp(rARB, 1, 65);
+
+    // DAMPING: Forza range 1.0-20.0. Scale off spring rate but enforce floor.
+    // Lightweight cars produce tiny values (your S15 hit 0.4) — clamp to 1.0 minimum.
+    const fBump = clamp(fS / 100 * 0.35, 1.0, 20.0);
+    const fReb  = clamp(fS / 100 * 0.55, 1.0, 20.0);
+    const rBump = clamp(rS / 100 * 0.30, 1.0, 20.0);
+    const rReb  = clamp(rS / 100 * 0.50, 1.0, 20.0);
+
+    // RIDE HEIGHT: Forza range roughly 3.0-7.0 inches depending on car
+    let fH = car.bodyType === 'OffRoad' || car.bodyType === 'Rally' ? 5.5 : (oldSchool ? 4.5 : 4.0);
+    fH = clamp(fH, 3.0, 7.0);
+    const rH = clamp(fH + 0.3, 3.0, 7.0);
+
+    // DIFFERENTIAL: 0-100%
+    const accel = clamp(isRWD ? 100 : (isAWD ? 80 : 40), 0, 100);
+    const decel = clamp(isRWD ? 30 : (isAWD ? 25 : 15), 0, 100);
+
+    // BRAKE: Balance 0-100%, Pressure 50-200%
+    const brakeBalance = clamp(58, 0, 100);
+    const brakePressure = clamp(115, 50, 200);
+
+    // TIRE PRESSURE: Forza range 15.0-50.0 psi
+    const tireF = clamp(33.0, 15.0, 50.0);
+    const tireR = clamp(29.0, 15.0, 50.0);
+
     const fitness = isRWD && car.driftFriendly ? 'Excellent drift platform' : isRWD ? 'Driftable RWD' : isAWD ? 'AWD - consider RWD swap' : 'FWD - very hard to drift';
+
     return '=== ' + car.make.toUpperCase() + ' ' + car.model.toUpperCase() + ' ===\n' +
       car.year + ' . ' + car.drivetrain + ' . ' + weight + ' lb @ ' + fwd + 'F/' + rwd + 'R\n\n' +
       fitness + '\n\n' +
-      'TIRE PRESSURE  F 33.0  R 29.0\n' +
+      'TIRE PRESSURE  F ' + tireF.toFixed(1) + '  R ' + tireR.toFixed(1) + '\n' +
       'ALIGNMENT      Camber F -3.0 R -1.5  Toe F -0.3 R -0.2  Caster 7.0\n' +
-      'ANTI-ROLL      F ' + fARB + '.00  R ' + rARB + '.00\n' +
+      'ANTI-ROLL      F ' + fARB.toFixed(2) + '  R ' + rARB.toFixed(2) + '\n' +
       'SPRINGS        F ' + fS + '  R ' + rS + '\n' +
-      'DAMPING Bump   F ' + (fS / 100 * 0.35).toFixed(1) + '  R ' + (rS / 100 * 0.30).toFixed(1) + '\n' +
-      'DAMPING Reb    F ' + (fS / 100 * 0.55).toFixed(1) + '  R ' + (rS / 100 * 0.50).toFixed(1) + '\n' +
+      'RIDE HEIGHT    F ' + fH.toFixed(1) + '  R ' + rH.toFixed(1) + '\n' +
+      'DAMPING Bump   F ' + fBump.toFixed(1) + '  R ' + rBump.toFixed(1) + '\n' +
+      'DAMPING Reb    F ' + fReb.toFixed(1) + '  R ' + rReb.toFixed(1) + '\n' +
       'DIFFERENTIAL   Accel ' + accel + '%  Decel ' + decel + '%\n' +
-      'BRAKE          58% front  115% pressure';
+      'BRAKE          ' + brakeBalance + '% front  ' + brakePressure + '% pressure';
   }
+
 
   loadCars();
 })();
